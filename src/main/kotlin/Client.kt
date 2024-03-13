@@ -3,35 +3,25 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 
 fun main() {
-    // args dão o conteúdo da mensagem e o nome do servidor
-    var aSocket: DatagramSocket? = null
-    try {
-        aSocket = DatagramSocket()
-        val msg = "Hello"
-        val m = msg.toByteArray()
-        val aHost: InetAddress = InetAddress.getByName("localhost")
-        val serverPort = 6789
-        val request = DatagramPacket(
-            m, msg.length,
-            aHost, serverPort
-        )
+    val serverAddress = "localhost"
+    val serverPort = 6789
+    while (true) {
+        try {
+            val socket = DatagramSocket()
+            val buffer = ByteArray(1024)
+            val pingPacket = DatagramPacket("ping".toByteArray(), 4, InetAddress.getByName(serverAddress), serverPort)
+            socket.send(pingPacket)
+            println("Client sent: ping")
 
-        // Envie uma mensagem
-        aSocket.send(request)
+            val response = DatagramPacket(buffer, buffer.size)
+            socket.receive(response)
+            val pongMessage = String(response.data, 0, response.length)
+            println("Client received: $pongMessage")
 
-        // Prepare uma mensagem vazia para uma resposta
-        val buffer = ByteArray(1000)
-        val response = DatagramPacket(buffer, buffer.size)
-
-        // Receba a resposta
-        aSocket.receive(response)
-
-        // Imprima a resposta
-        val resp = String(response.data)
-        println("Client received: $resp")
-    } catch (e: Exception) {
-        e.printStackTrace()
-    } finally {
-        aSocket?.close()
+            socket.close()
+            Thread.sleep(1000)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
